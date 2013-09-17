@@ -193,7 +193,7 @@ memcache_parse_req(struct msg *r)
                 r->token = NULL;
                 r->type = MSG_UNKNOWN;
 
-                switch (p - m) {
+		switch (p - m) {
 
                 case 3:
                     if (str4cmp(m, 'g', 'e', 't', ' ')) {
@@ -237,6 +237,14 @@ memcache_parse_req(struct msg *r)
                     if (str4cmp(m, 'q', 'u', 'i', 't')) {
                         r->type = MSG_REQ_MC_QUIT;
                         r->quit = 1;
+                        break;
+                    }
+
+                    break;
+
+                case 5:
+                    if (str5cmp(m, 's', 't', 'a', 't', 's')) {
+                        r->type = MSG_REQ_MC_STATS;
                         break;
                     }
 
@@ -287,6 +295,7 @@ memcache_parse_req(struct msg *r)
                     state = SW_SPACES_BEFORE_KEY;
                     break;
 
+                case MSG_REQ_MC_STATS:
                 case MSG_REQ_MC_QUIT:
                     p = p - 1; /* go back by 1 byte */
                     state = SW_CRLF;
@@ -731,6 +740,7 @@ memcache_parse_rsp(struct msg *r)
         SW_RUNTO_VAL,
         SW_VAL,
         SW_VAL_LF,
+        SW_MAYBE_STAT,
         SW_END,
         SW_RUNTO_CRLF,
         SW_CRLF,
@@ -804,6 +814,14 @@ memcache_parse_rsp(struct msg *r)
                         r->type = MSG_RSP_MC_END;
                         /* end_start <- m; end_end <- p - 1*/
                         r->end = m;
+                        break;
+                    }
+
+                    break;
+
+                case 4:
+                    if (str4cmp(m, 'S', 'T', 'A', 'T')) {
+                        r->type = MSG_RSP_MC_STAT;
                         break;
                     }
 
@@ -899,6 +917,10 @@ memcache_parse_rsp(struct msg *r)
 
                 case MSG_RSP_MC_ERROR:
                     state = SW_CRLF;
+                    break;
+
+                case MSG_RSP_MC_STAT:
+                    state = SW_MAYBE_STAT;
                     break;
 
                 case MSG_RSP_MC_CLIENT_ERROR:
@@ -1050,9 +1072,20 @@ memcache_parse_rsp(struct msg *r)
 
             break;
 
+        case SW_MAYBE_STAT:
+            if (ch == LF) {
+                state = SW_END;
+            }
+
+            break;
+
         case SW_END:
             if (r->token == NULL) {
                 if (ch != 'E') {
+                    if (r->type == MSG_RSP_MC_STAT && ch == 'S') {
+                        state = SW_MAYBE_STAT;
+                        break;
+                    }
                     goto error;
                 }
                 /* end_start <- p */

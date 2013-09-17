@@ -45,6 +45,7 @@ typedef enum msg_type {
     MSG_REQ_MC_PREPEND,
     MSG_REQ_MC_INCR,                      /* memcache arithmetic request */
     MSG_REQ_MC_DECR,
+    MSG_REQ_MC_STATS,                     /* memcache stats request */
     MSG_REQ_MC_QUIT,                      /* memcache quit request */
     MSG_RSP_MC_NUM,                       /* memcache arithmetic response */
     MSG_RSP_MC_STORED,                    /* memcache cas and storage response */
@@ -54,6 +55,7 @@ typedef enum msg_type {
     MSG_RSP_MC_END,
     MSG_RSP_MC_VALUE,
     MSG_RSP_MC_DELETED,                   /* memcache delete response */
+    MSG_RSP_MC_STAT,
     MSG_RSP_MC_ERROR,                     /* memcache error responses */
     MSG_RSP_MC_CLIENT_ERROR,
     MSG_RSP_MC_SERVER_ERROR,
