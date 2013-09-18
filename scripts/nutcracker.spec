@@ -1,13 +1,17 @@
 Summary: Twitter's nutcracker redis and memcached proxy
 Name: nutcracker
-Version: 0.2.2
-Release: 1
+Version: 0.2.4
+Release: 2
 URL: http://code.google.com/p/twemproxy/
 Source0: %{name}-%{version}.tar.gz
 License: Apache License 2.0
 Group: System Environment/Libraries
-Packager:  Tom Parrott <tomp@tomp.co.uk>
+Packager: Tom Parrott <tomp@tomp.co.uk>
 BuildRoot: %{_tmppath}/%{name}-root
+
+BuildRequires: autoconf
+BuildRequires: automake
+BuildRequires: libtool
 
 %description
 twemproxy (pronounced "two-em-proxy"), aka nutcracker is a fast and lightweight proxy for memcached and redis protocol.
@@ -15,6 +19,9 @@ It was primarily built to reduce the connection count on the backend caching ser
 
 %prep
 %setup -q
+%if 0%{?rhel} == 6
+sed -i 's/2.64/2.63/g' configure.ac
+%endif
 autoreconf -fvi
 
 %build
@@ -49,4 +56,5 @@ fi
 %defattr(-,root,root,-)
 /usr/bin/nutcracker
 %{_initrddir}/%{name}
+%{_mandir}/man8/nutcracker.8.gz
 %config(noreplace)%{_sysconfdir}/%{name}/%{name}.yml
